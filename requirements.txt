@@ -1,0 +1,22 @@
+# Core
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-experimental>=0.3.0
+langgraph>=0.2.0
+langchain-chroma>=0.1.0
+langchain-text-splitters>=0.3.0
+
+# PDF Processing
+pymupdf>=1.24.0
+
+# Vector Store
+chromadb>=0.5.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+loguru>=0.7.0
+
+# For semantic chunking
+tiktoken>=0.7.0
