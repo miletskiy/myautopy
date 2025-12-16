@@ -152,6 +152,31 @@ def save_results(results: dict) -> Path:
     return output_file
 
 
+def run_single_question(question: str) -> None:
+    """
+    Run a single custom question interactively.
+    """
+    embeddings = get_embeddings()
+    vector_store = load_vector_store(embeddings)
+    graph = build_rag_graph(vector_store)
+
+    state = run_query(graph, question)
+
+    print("\n" + "=" * 80)
+    print("ANSWER:")
+    print("=" * 80)
+    print(state.answer.answer if state.answer else "No answer generated")
+    print("\n" + "-" * 80)
+    print("ROUTING:")
+    print(f"  Document Type: {state.document_type}")
+    print(f"  Reasoning: {state.routing_reasoning}")
+    print("\n" + "-" * 80)
+    print("CITATIONS:")
+    if state.answer:
+        for i, citation in enumerate(state.answer.citations, 1):
+            print(f"  [{i}] {citation.document}, Page {citation.page}")
+
+
 def main():
     """Main entry point."""
     import argparse
@@ -165,22 +190,46 @@ def main():
         help="Ingest PDF documents into vector store",
     )
     parser.add_argument(
+        "--reingest",
+        action="store_true",
+        help="Force re-ingestion of documents",
+    )
+    parser.add_argument(
         "--analyze",
         action="store_true",
         help="Run analysis with predefined questions",
     )
+    parser.add_argument(
+        "--question",
+        type=str,
+        help="Run a single custom question",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run full pipeline: ingest + analyze",
+    )
+
     args = parser.parse_args()
 
-    if args.ingest:
-        ingest_documents(force_reingest=True)
+    if args.all:
+        ingest_documents(force_reingest=args.reingest)
+        results = run_analysis()
+        save_results(results)
+    elif args.ingest or args.reingest:
+        ingest_documents(force_reingest=args.reingest)
     elif args.analyze:
         results = run_analysis()
         save_results(results)
+    elif args.question:
+        run_single_question(args.question)
     else:
         parser.print_help()
         print("\nExamples:")
+        print("  python main.py --all              # Full pipeline")
         print("  python main.py --ingest           # Only ingest documents")
         print("  python main.py --analyze          # Only run analysis")
+        print('  python main.py --question "..."   # Single question')
 
 
 if __name__ == "__main__":
